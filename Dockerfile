@@ -1,10 +1,14 @@
-FROM python:3.9-slim
-RUN pip install django==3.2
+# Use the official Python image as the base image
+FROM python:3.8
 
-COPY . .
+# Set the working directory in the container
+WORKDIR /app
 
-RUN python manage.py migrate
-EXPOSE 8000
-CMD ["python","manage.py","runserver","0.0.0.0:8000"]
+# Copy the application files into the working directory
+COPY . /app
 
+# Install the application dependencies
+RUN pip install -r requirements.txt
 
+# Define the entry point for the container
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
