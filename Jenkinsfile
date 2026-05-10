@@ -1,18 +1,37 @@
 pipeline {
     agent any
+
     stages {
-        stage('Build Image') {
+        stage('Checkout') {
             steps {
-                sh 'docker build -t niloyroy0000/todo-app:latest .'
+                checkout scm
+
+                sh 'git log HEAD^..HEAD --pretty="%h %an - %s" > GIT_CHANGES'
+                def lastChanges = readFile('GIT_CHANGES')
             }
         }
-        stage('Push to Docker Hub') {
+
+        stage('Deploy') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
-                    sh "echo \$DOCKER_HUB_PASSWORD | docker login -u \$DOCKER_HUB_USERNAME --password-stdin"
-                    sh "docker push niloyroy0000/todo-app:latest"
-                }
+                sh './jenkins_deploy_prod_docker.sh'
             }
+        }
+
+        stage('Publish results') {
+            steps {
+                echo "Deployment successful"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Build successful"
+            // You can add additional steps here, like running tests or notifications.
+        }
+
+        failure {
+            echo "Build failed"
         }
     }
 }
